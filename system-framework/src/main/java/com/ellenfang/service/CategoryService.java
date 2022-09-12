@@ -3,6 +3,9 @@ package com.ellenfang.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.ellenfang.domain.ResponseResult;
 import com.ellenfang.domain.entity.Category;
+import com.ellenfang.domain.vo.CategoryVo;
+
+import java.util.List;
 
 
 /**
@@ -14,5 +17,7 @@ import com.ellenfang.domain.entity.Category;
 public interface CategoryService extends IService<Category> {
 
     ResponseResult getCategoryList();
+
+    List<CategoryVo> listAllCategory();
 }
 

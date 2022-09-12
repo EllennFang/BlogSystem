@@ -1,16 +1,16 @@
 package com.ellenfang.domain.vo;
 
+import com.ellenfang.domain.entity.Menu;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class CategoryVo {
+public class RoutersVo {
 
-    private Long id;
-    private String name;
-    // 描述
-    private String description;
+    private List<Menu> menus;
 }

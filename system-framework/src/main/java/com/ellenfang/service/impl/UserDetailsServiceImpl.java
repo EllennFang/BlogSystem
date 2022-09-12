@@ -32,6 +32,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
         // 返回用户信息
         // TODO 查询权限信息封装
+        // TODO 如果是后台用户，才需要查询劝降封装
 
         return new LoginUser(user);
     }

@@ -5,12 +5,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-public class CategoryVo {
+@AllArgsConstructor
+public class TagVo {
 
-    private Long id;
-    private String name;
-    // 描述
-    private String description;
+    Long id;
+
+    String name;
+
+    String remark;
 }

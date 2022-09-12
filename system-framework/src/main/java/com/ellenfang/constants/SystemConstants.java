@@ -26,4 +26,12 @@ public class SystemConstants
      * 评论类型为友链评论
      */
     public static final String LINK_COMMENT = "1";
+    /**
+     * 权限类型为菜单
+     */
+    public static final String MENU = "C";
+    /**
+     * 权限类型为按钮
+     */
+    public static final String BUTTON = "F";
 }

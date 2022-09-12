@@ -5,18 +5,22 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.ellenfang.constants.SystemConstants;
 import com.ellenfang.domain.ResponseResult;
+import com.ellenfang.domain.dto.AddArticleDto;
 import com.ellenfang.domain.entity.Article;
+import com.ellenfang.domain.entity.ArticleTag;
 import com.ellenfang.domain.vo.ArticleDetailVo;
 import com.ellenfang.domain.vo.ArticleListVo;
 import com.ellenfang.domain.vo.HotArticleVo;
 import com.ellenfang.domain.vo.PageVo;
 import com.ellenfang.mapper.ArticleMapper;
 import com.ellenfang.service.ArticleService;
+import com.ellenfang.service.ArticleTagService;
 import com.ellenfang.service.CategoryService;
 import com.ellenfang.utils.BeanCopyUtils;
 import com.ellenfang.utils.RedisCache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +35,9 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
     @Autowired
     private RedisCache redisCache;
+
+    @Autowired
+    private ArticleTagService articleTagService;
 
     @Override
     public ResponseResult hotArticleList() {
@@ -115,6 +122,23 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     public ResponseResult updateViewCount(Long id) {
         // 更新 redis 中对应 id 的浏览量
         redisCache.incrementCacheMapValue("article:viewCount", id.toString(), 1);
+        return ResponseResult.okResult();
+    }
+
+    @Override
+    @Transactional
+    public ResponseResult add(AddArticleDto articleDto) {
+        // 添加博客
+        Article article = BeanCopyUtils.copyBean(articleDto, Article.class);
+        save(article);
+
+        // 创建与该博客相连的标签链
+        List<ArticleTag> articleTags = articleDto.getTags().stream()
+                .map(tagId -> new ArticleTag(article.getId(), tagId))
+                .collect(Collectors.toList());
+
+        // 将上边的关系添加到 文章-标签 关联表
+        articleTagService.saveBatch(articleTags);
         return ResponseResult.okResult();
     }
 }

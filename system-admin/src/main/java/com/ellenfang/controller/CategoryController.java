@@ -33,7 +33,7 @@ public class CategoryController {
         return ResponseResult.okResult(list);
     }
 
-    @PreAuthorize("")
+    @PreAuthorize("@ps.hasPermission('content:category:export')")
     @GetMapping("/export")
     public void export(HttpServletResponse response) {
         try {

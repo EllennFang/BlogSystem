@@ -34,4 +34,8 @@ public class SystemConstants
      * 权限类型为按钮
      */
     public static final String BUTTON = "F";
+    /**
+     * 用户类型为后台用户
+     */
+    public static final String ADMIN = "1";
 }

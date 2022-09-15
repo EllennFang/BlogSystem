@@ -139,11 +139,24 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
     @Override
     public ResponseResult updateArticle(UpdateArticleDto updateArticleDto) {
-        //TODO 修改 article 数据
+        // 1. 修改 article 数据
+        // 将 Dto 转换为 Article
+        Article article = BeanCopyUtils.copyBean(updateArticleDto, Article.class);
+        // 根据 id 修改
+        updateById(article);
 
-        //TODO 获取 Dto 中的标签集合，并修改（删除原本有现在没有的，添加原本没有现在有的）
-
-        return null;
+        //2. 获取 Dto 中的标签集合，并修改（删除原本有现在没有的，添加原本没有现在有的）
+        List<Long> tags = updateArticleDto.getTags();
+        // 先删除所有该文章相关的标签集合
+        articleTagService.remove(new LambdaQueryWrapper<ArticleTag>().eq(ArticleTag::getArticleId, updateArticleDto.getId()));
+        // 将新的标签集合写入
+        List<ArticleTag> articleTags = tags.stream()
+                .map(tag -> {
+                    return new ArticleTag(updateArticleDto.getId(), tag);
+                })
+                .collect(Collectors.toList());
+        articleTagService.saveBatch(articleTags);
+        return ResponseResult.okResult();
     }
 
     @Override

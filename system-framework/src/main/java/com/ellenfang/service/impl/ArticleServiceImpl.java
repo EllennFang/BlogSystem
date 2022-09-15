@@ -9,11 +9,13 @@ import com.ellenfang.domain.dto.AddArticleDto;
 import com.ellenfang.domain.dto.UpdateArticleDto;
 import com.ellenfang.domain.entity.Article;
 import com.ellenfang.domain.entity.ArticleTag;
+import com.ellenfang.domain.entity.Comment;
 import com.ellenfang.domain.vo.*;
 import com.ellenfang.mapper.ArticleMapper;
 import com.ellenfang.service.ArticleService;
 import com.ellenfang.service.ArticleTagService;
 import com.ellenfang.service.CategoryService;
+import com.ellenfang.service.CommentService;
 import com.ellenfang.utils.BeanCopyUtils;
 import com.ellenfang.utils.RedisCache;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +39,9 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
     @Autowired
     private ArticleTagService articleTagService;
+
+    @Autowired
+    private CommentService commentService;
 
     @Override
     public ResponseResult hotArticleList() {
@@ -156,6 +161,25 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
                 })
                 .collect(Collectors.toList());
         articleTagService.saveBatch(articleTags);
+        return ResponseResult.okResult();
+    }
+
+    @Override
+    public ResponseResult deleteArticle(Integer id) {
+        //  根据 id 删除对应的文章
+        LambdaQueryWrapper<Article> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Article::getId, id);
+        remove(queryWrapper);
+
+        // 根据 id 删除相应的标签关系
+        LambdaQueryWrapper<ArticleTag> tagLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        tagLambdaQueryWrapper.eq(ArticleTag::getArticleId, id);
+        articleTagService.remove(tagLambdaQueryWrapper);
+
+        // 根据 id 删除对应文章的评论
+        LambdaQueryWrapper<Comment> commentLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        commentLambdaQueryWrapper.eq(Comment::getArticleId, id);
+        commentService.remove(commentLambdaQueryWrapper);
         return ResponseResult.okResult();
     }
 

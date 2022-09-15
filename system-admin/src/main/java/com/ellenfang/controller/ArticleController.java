@@ -3,8 +3,10 @@ package com.ellenfang.controller;
 import com.ellenfang.domain.ResponseResult;
 import com.ellenfang.domain.dto.AddArticleDto;
 import com.ellenfang.domain.dto.UpdateArticleDto;
+import com.ellenfang.domain.entity.Menu;
 import com.ellenfang.domain.vo.PageVo;
 import com.ellenfang.service.ArticleService;
+import com.ellenfang.service.MenuService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,6 +16,9 @@ public class ArticleController {
 
     @Autowired
     private ArticleService articleService;
+
+    @Autowired
+    private MenuService menuService;
 
     @PostMapping
     public ResponseResult add(@RequestBody AddArticleDto article) {
@@ -34,4 +39,10 @@ public class ArticleController {
     public ResponseResult updateArticle(@RequestBody UpdateArticleDto updateArticleDto) {
         return articleService.updateArticle(updateArticleDto);
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseResult deleteArticle(@PathVariable(value = "id") Integer id) {
+        return articleService.deleteArticle(id);
+    }
+
 }

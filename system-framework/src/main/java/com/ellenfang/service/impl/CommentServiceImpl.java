@@ -5,7 +5,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.ellenfang.constants.SystemConstants;
 import com.ellenfang.domain.ResponseResult;
+import com.ellenfang.domain.dto.AddCommentDto;
 import com.ellenfang.domain.entity.Comment;
+import com.ellenfang.domain.entity.LoginUser;
 import com.ellenfang.domain.vo.CommentVo;
 import com.ellenfang.domain.vo.PageVo;
 import com.ellenfang.enums.AppHttpCodeEnum;
@@ -14,6 +16,7 @@ import com.ellenfang.mapper.CommentMapper;
 import com.ellenfang.service.CommentService;
 import com.ellenfang.service.UserService;
 import com.ellenfang.utils.BeanCopyUtils;
+import com.ellenfang.utils.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -63,7 +66,13 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     }
 
     @Override
-    public ResponseResult addComment(Comment comment) {
+    public ResponseResult addComment(AddCommentDto addCommentDto) {
+        Comment comment = BeanCopyUtils.copyBean(addCommentDto, Comment.class);
+        // 判断用户是否登录
+        if (SecurityUtils.getLoginUser() == null) {
+            // 说明用户没用登录，返回错误信息
+            throw new SystemException(AppHttpCodeEnum.NEED_LOGIN);
+        }
         // 评论内容不能为空
         if (!StringUtils.hasText(comment.getContent())) {
             throw new SystemException(AppHttpCodeEnum.CONTENT_NOT_NULL);

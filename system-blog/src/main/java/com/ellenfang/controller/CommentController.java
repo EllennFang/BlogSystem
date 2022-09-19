@@ -28,8 +28,7 @@ public class CommentController {
 
     @PostMapping
     public ResponseResult addComment(@RequestBody AddCommentDto addCommentDto){
-        Comment comment = BeanCopyUtils.copyBean(addCommentDto, Comment.class);
-        return commentService.addComment(comment);
+        return commentService.addComment(addCommentDto);
     }
 
     @GetMapping("/linkCommentList")

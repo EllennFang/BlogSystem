@@ -19,4 +19,6 @@ public class LinkVo {
     private String logo;
 
     private String description;
+
+    private String status;
 }

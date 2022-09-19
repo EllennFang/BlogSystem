@@ -5,16 +5,21 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.ellenfang.constants.SystemConstants;
 import com.ellenfang.domain.ResponseResult;
 import com.ellenfang.domain.entity.Menu;
+import com.ellenfang.domain.vo.MenuSelectVo;
 import com.ellenfang.domain.vo.MenuVo;
+import com.ellenfang.domain.vo.RoleMenuTreeVo;
 import com.ellenfang.enums.AppHttpCodeEnum;
 import com.ellenfang.mapper.MenuMapper;
+import com.ellenfang.mapper.RoleMenuMapper;
 import com.ellenfang.service.MenuService;
 import com.ellenfang.utils.BeanCopyUtils;
 import com.ellenfang.utils.SecurityUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,6 +30,9 @@ import java.util.stream.Collectors;
  */
 @Service("menuService")
 public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements MenuService {
+
+    @Autowired
+    RoleMenuMapper roleMenuMapper;
 
     @Override
     public ResponseResult<MenuVo> list(Integer status, String menuName) {
@@ -57,23 +65,6 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
         }
         // 否则返回其所具有的权限
         return getBaseMapper().selectPermsByUserId(id);
-    }
-
-    @Override
-    public List<Menu> selectRouterMenuTreeByUserId(Long userId) {
-        MenuMapper menuMapper = getBaseMapper();
-        List<Menu> menus = null;
-        // 如果是管理员，查询所有路由（类型为目录或菜单，状态为正常）
-        if (SecurityUtils.isAdmin()) {
-            menus = menuMapper.selectAllRouterMenu();
-        } else {
-            // 否则返回 查询用户所具有的 Menu
-            menus = menuMapper.selectRouterMenuTreeByUserId(userId);
-        }
-        // 将查询的 menu 集合构建为 tree 的形式
-        // 思路：先找出第一层的菜单，然后去找他们的子菜单并设置到 children 属性中
-        List<Menu> menuTree = buildMenuTree(menus, 0L);
-        return menuTree;
     }
 
     @Override
@@ -117,10 +108,72 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
         return ResponseResult.okResult();
     }
 
+    @Override
+    public ResponseResult<RoleMenuTreeVo> roleMenuTreeSelectByRoleId(Long id) {
+        MenuMapper menuMapper = getBaseMapper();
+        List<Menu> menus = null;
+        // 如果是管理员，菜单即为所有
+        if (id.equals(1L)) {
+            menus = menuMapper.selectAllRouterMenu();
+        } else {
+            // 根据 角色id 查询对应的菜单列表,并转换为树的形式
+            menus = menuMapper.roleMenuTreeSelectByRoleId(id);
+        }
+        List<MenuSelectVo> menuSelectVos = BeanCopyUtils.copyBeanList(menus, MenuSelectVo.class);
+        List<MenuSelectVo> menuTree = buildMenuSelectTree(menuSelectVos, 0L);
+        // 根据 上面所查询出来的菜单列表，查询相关联的菜单权限id列表
+        List<Long> checkedKeys = new LinkedList<>();
+        menus.stream()
+                .forEach((Menu menu) -> {
+                    if (menu.getMenuType().equals("C")) {
+                        checkedKeys.add(menu.getId());
+                    }
+                });
+        // 封装为最终的 vo
+        RoleMenuTreeVo roleMenuTreeVo = new RoleMenuTreeVo(menuTree, checkedKeys);
+        return ResponseResult.okResult(roleMenuTreeVo);
+    }
+
+    @Override
+    public ResponseResult<MenuSelectVo> treeSelect() {
+        // 查询所有的菜单
+        List<Menu> menus = list(null);
+        // 封装为 vo
+        List<MenuSelectVo> menuSelectVos = BeanCopyUtils.copyBeanList(menus, MenuSelectVo.class);
+        // 转换为树的形式
+        List<MenuSelectVo> selectTree = buildMenuSelectTree(menuSelectVos, 0L);
+        return ResponseResult.okResult(selectTree);
+    }
+
+    @Override
+    public List<Menu> selectRouterMenuTreeByUserId(Long userId) {
+        MenuMapper menuMapper = getBaseMapper();
+        List<Menu> menus = null;
+        // 如果是管理员，查询所有路由（类型为目录或菜单，状态为正常）
+        if (SecurityUtils.isAdmin()) {
+            menus = menuMapper.selectAllRouterMenu();
+        } else {
+            // 否则返回 查询用户所具有的 Menu
+            menus = menuMapper.selectRouterMenuTreeByUserId(userId);
+        }
+        // 将查询的 menu 集合构建为 tree 的形式
+        // 思路：先找出第一层的菜单，然后去找他们的子菜单并设置到 children 属性中
+        List<Menu> menuTree = buildMenuTree(menus, 0L);
+        return menuTree;
+    }
+
     private List<Menu> buildMenuTree(List<Menu> menus, Long parentId) {
         List<Menu> menuTree = menus.stream()
                 .filter(menu -> menu.getParentId().equals(parentId))
                 .map(menu -> menu.setChildren(getChildren(menu, menus)))
+                .collect(Collectors.toList());
+        return menuTree;
+    }
+
+    private List<MenuSelectVo> buildMenuSelectTree(List<MenuSelectVo> menuSelectVos, Long parentId) {
+        List<MenuSelectVo> menuTree = menuSelectVos.stream()
+                .filter(menuSelectVo -> menuSelectVo.getParentId().equals(parentId))
+                .map(menuSelectVo -> menuSelectVo.setChildren(getSelectChildren(menuSelectVo, menuSelectVos)))
                 .collect(Collectors.toList());
         return menuTree;
     }
@@ -139,5 +192,12 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
         return childrenList;
     }
 
+    private List<MenuSelectVo> getSelectChildren(MenuSelectVo menuSelectVo, List<MenuSelectVo> menuSelectVos) {
+        List<MenuSelectVo> childrenList = menuSelectVos.stream()
+                .filter(m -> m.getParentId().equals(menuSelectVo.getId()))
+                .map(m -> m.setChildren(getSelectChildren(m, menuSelectVos)))
+                .collect(Collectors.toList());
+        return childrenList;
+    }
 }
 

@@ -6,15 +6,14 @@ import com.ellenfang.domain.ResponseResult;
 import com.ellenfang.domain.entity.Category;
 import com.ellenfang.domain.vo.CategoryVo;
 import com.ellenfang.domain.vo.ExcelCategoryVo;
+import com.ellenfang.domain.vo.PageVo;
 import com.ellenfang.enums.AppHttpCodeEnum;
 import com.ellenfang.service.CategoryService;
 import com.ellenfang.utils.BeanCopyUtils;
 import com.ellenfang.utils.WebUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.UnsupportedEncodingException;
@@ -51,5 +50,30 @@ public class CategoryController {
             ResponseResult result = ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR);
             WebUtils.renderString(response, JSON.toJSONString(result));
         }
+    }
+
+    @GetMapping("/list")
+    public ResponseResult<PageVo> listCategoryByPage(Integer pageNum, Integer pageSize,String name, String status) {
+        return categoryService.listCategoryByPage(pageNum, pageSize, name, status);
+    }
+
+    @PostMapping
+    public ResponseResult addCategoory(@RequestBody Category category) {
+        return categoryService.addCategory(category);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseResult<CategoryVo> queryCategoryById(@PathVariable(value = "id") Long id) {
+        return categoryService.queryCategoryById(id);
+    }
+
+    @PutMapping
+    public ResponseResult updateCategory(@RequestBody CategoryVo category) {
+        return categoryService.updateCategory(category);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseResult deleteCategory(@PathVariable(value = "id") Long id) {
+        return categoryService.deleteCategory(id);
     }
 }

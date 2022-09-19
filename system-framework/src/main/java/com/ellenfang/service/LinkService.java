@@ -3,6 +3,8 @@ package com.ellenfang.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.ellenfang.domain.ResponseResult;
 import com.ellenfang.domain.entity.Link;
+import com.ellenfang.domain.vo.LinkVo;
+import com.ellenfang.domain.vo.PageVo;
 
 
 /**
@@ -14,5 +16,15 @@ import com.ellenfang.domain.entity.Link;
 public interface LinkService extends IService<Link> {
 
     ResponseResult getAllLink();
+
+    ResponseResult<PageVo> getAllLinkByPage(Integer pageNum, Integer pageSize, String name, String status);
+
+    ResponseResult addLink(Link link);
+
+    ResponseResult<LinkVo> queryLinkById(Long id);
+
+    ResponseResult updateLink(Link link);
+
+    ResponseResult deleteLink(Long id);
 }
 

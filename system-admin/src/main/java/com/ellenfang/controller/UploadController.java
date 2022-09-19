@@ -14,7 +14,7 @@ import java.io.IOException;
 public class UploadController {
 
     @Autowired
-    UploadService uploadService;
+    private UploadService uploadService;
 
     @PostMapping("/upload")
     public ResponseResult uploadImg(@RequestParam("img") MultipartFile multipartFile) {
